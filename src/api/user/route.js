@@ -3,7 +3,7 @@ import { body } from 'express-validator';
 
 import User from './model';
 
-import { signup, login, getUserById } from './controller';
+import { signup, login, getUserById, tokenValidation } from './controller';
 
 const router = express.Router();
 
@@ -27,7 +27,7 @@ router.post('/login', [
 ],
     login);
 
-router.get('/single/:id', getUserById);
+router.get('/single/:id', tokenValidation, getUserById);
 
 
 

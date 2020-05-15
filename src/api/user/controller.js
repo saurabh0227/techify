@@ -1,6 +1,7 @@
 import { validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
+import jwt from 'jsonwebtoken';
 import User from './model';
 
 const ObjectId = mongoose.Types.ObjectId;
@@ -67,9 +68,17 @@ export const login = (req, res, next) => {
                 throw error;
             }
 
+            const token = await jwt.sign({
+                email: user.email,
+                userId: user._id.toString()
+            }, 'somesupersecretsecret',
+                { expiresIn: '1h' }
+            );
+
             if (user.role === 'editor') {
                 resolve(
                     res.status(200).json({
+                        token: token,
                         status: 'Success',
                         data: user
                     })
@@ -78,6 +87,7 @@ export const login = (req, res, next) => {
                 const users = await User.find()
                 resolve(
                     res.status(200).json({
+                        token: token,
                         status: 'Success',
                         data: users
                     })
@@ -118,4 +128,28 @@ export const getUserById = (req, res, next) => {
         }
 
     })
+}
+
+export const tokenValidation = (req, res, next) => {
+    const authHeader = req.get('Authorization')
+    if (!authHeader) {
+        const error = new Error('Not authenticated.');
+        error.statusCode = 401;
+        throw error;
+    }
+    const token = authHeader.split(' ')[1];
+    let decodedToken;
+    try {
+        decodedToken = jwt.verify(token, 'somesupersecretsecret');
+    } catch (err) {
+        err.statusCode = 500;
+        throw err;
+    }
+    if (!decodedToken) {
+        const error = new Error('Not authenticated.');
+        err.statusCode = 401;
+        throw error;
+    }
+    req.userId = decodedToken.userId;
+    next();
 }
