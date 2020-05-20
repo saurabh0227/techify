@@ -70,36 +70,52 @@ export const login = (req, res, next) => {
 
             const token = await jwt.sign({
                 email: user.email,
-                userId: user._id.toString()
+                userId: user._id.toString(),
+                role: user.role
             }, 'somesupersecretsecret',
                 { expiresIn: '1h' }
             );
 
-            if (user.role === 'editor') {
-                resolve(
-                    res.status(200).json({
-                        token: token,
-                        status: 'Success',
-                        data: user
-                    })
-                )
-            } else {
-                const users = await User.find()
-                resolve(
-                    res.status(200).json({
-                        token: token,
-                        status: 'Success',
-                        data: users
-                    })
-                )
-            }
-
+            resolve(
+                res.status(200).json({
+                    token: token
+                })
+            )
         } catch (err) {
             if (!err.statusCode) {
                 err.statusCode = 500;
             }
             next(err);
         }
+    })
+}
+
+export const getUserList = (req, res, next) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const role = req.role
+            const user = role === 'admin'
+                ? await User.find()
+                : await User.findOne({ _id: ObjectId(req.userId) })
+            if (!user) {
+                const error = new Error('User not found.');
+                error.statusCode = 401;
+                throw error;
+            } else {
+                resolve(
+                    res.status(200).json({
+                        status: 'Success',
+                        data: user
+                    })
+                )
+            }
+        } catch (err) {
+            if (!err.statusCode) {
+                err.statusCode = 500;
+            }
+            next(err);
+        }
+
     })
 }
 
@@ -151,5 +167,6 @@ export const tokenValidation = (req, res, next) => {
         throw error;
     }
     req.userId = decodedToken.userId;
+    req.role = decodedToken.role;
     next();
 }

@@ -6,6 +6,8 @@ import userRoutes from './api/user/route'
 
 const app = express();
 
+const port = 3000
+
 
 app.use(bodyParser.json());
 
@@ -33,7 +35,7 @@ mongoose.connect(
         useNewUrlParser: true
     }
 ).then(result => {
-    app.listen(3000, () => {
-        console.log(`Port: 3000`)
+    app.listen(port, () => {
+        console.log(`Port: ${port}`)
     })
 }).catch(err => console.log(err))

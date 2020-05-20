@@ -3,7 +3,7 @@ import { body } from 'express-validator';
 
 import User from './model';
 
-import { signup, login, getUserById, tokenValidation } from './controller';
+import { signup, login, getUserById, getUserList, tokenValidation } from './controller';
 
 const router = express.Router();
 
@@ -28,6 +28,8 @@ router.post('/login', [
     login);
 
 router.get('/single/:id', tokenValidation, getUserById);
+
+router.get('/userList', tokenValidation, getUserList);
 
 
 
